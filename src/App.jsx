@@ -1,6 +1,6 @@
 import Canvas from './canvas.jsx';
 
-import './App.css';
+import './App.css'
 
 function App() {
 	const GRID_WIDTH = 400;
