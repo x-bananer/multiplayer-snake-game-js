@@ -20,6 +20,11 @@ let state;
 
 const clients = new Set();
 
+let players = {
+    p1: null,
+    p2: null
+};
+
 const broadcast = () => {
     const data = JSON.stringify({ type: 'state', payload: state });
     clients.forEach(client => {
@@ -75,7 +80,15 @@ const loop = () => {
 wss.on('connection', ws => {
     clients.add(ws);
 
-    const playerId = clients.size === 1 ? 'p1' : 'p2';
+    let playerId = null;
+
+    if (!players.p1) {
+        players.p1 = ws;
+        playerId = 'p1';
+    } else if (!players.p2) {
+        players.p2 = ws;
+        playerId = 'p2';
+    }
 
     ws.send(JSON.stringify({
         type: 'role',
@@ -88,14 +101,14 @@ wss.on('connection', ws => {
         try {
             const data = JSON.parse(message);
 
-            if (data.type === 'input') {
-                const { player, direction } = data;
-                const current = state.directions[player];
+            if (data.type === 'input' && playerId) {
+                const direction = data.direction;
+                const current = state.directions[playerId];
 
-                if (direction === 'DOWN' && current !== 'UP') state.directions[player] = 'DOWN';
-                if (direction === 'UP' && current !== 'DOWN') state.directions[player] = 'UP';
-                if (direction === 'RIGHT' && current !== 'LEFT') state.directions[player] = 'RIGHT';
-                if (direction === 'LEFT' && current !== 'RIGHT') state.directions[player] = 'LEFT';
+                if (direction === 'DOWN' && current !== 'UP') state.directions[playerId] = 'DOWN';
+                if (direction === 'UP' && current !== 'DOWN') state.directions[playerId] = 'UP';
+                if (direction === 'RIGHT' && current !== 'LEFT') state.directions[playerId] = 'RIGHT';
+                if (direction === 'LEFT' && current !== 'RIGHT') state.directions[playerId] = 'LEFT';
             }
 
             if (data.type === 'restart') {
@@ -107,6 +120,9 @@ wss.on('connection', ws => {
 
     ws.on('close', () => {
         clients.delete(ws);
+
+        if (players.p1 === ws) players.p1 = null;
+        if (players.p2 === ws) players.p2 = null;
     });
 });
 
