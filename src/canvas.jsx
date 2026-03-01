@@ -12,7 +12,11 @@ const Canvas = () => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
 
-        socketRef.current = new WebSocket('ws://localhost:3000');
+        socketRef.current = new WebSocket(
+            import.meta.env.DEV
+                ? 'ws://localhost:3000'
+                : 'wss://snake-game-js-tamu.onrender.com'
+        );
         const socket = socketRef.current;
 
         let myPlayer = null;
