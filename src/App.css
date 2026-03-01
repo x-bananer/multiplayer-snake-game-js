@@ -1,0 +1,28 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+   border-radius: 8px;
+  overflow: hidden;
+}
+
+.app {
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+}
+
+/* :root {
+  --mato-width: 10px;
+  --mato-height: 10px;
+}
+
+.mato {
+  width: var(--mato-width);
+  height: var(--mato-height);
+  background-color:deeppink;
+  border: 1px dashed #333333;
+  border-radius: 1px;
+  box-sizing: border-box;
+} */
