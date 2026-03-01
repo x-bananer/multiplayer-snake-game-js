@@ -1,192 +1,159 @@
 import { useRef, useEffect } from 'react';
 
-function Canvas(props) {
+const CELL = 20;
+const INITIAL_SPEED = 200;
+const MIN_SPEED = 60;
+const SPEED_STEP = 5;
+
+const generateFood = (width, height) => ({
+    x: Math.floor(Math.random() * (width / CELL)) * CELL,
+    y: Math.floor(Math.random() * (height / CELL)) * CELL
+});
+
+const getNextHead = (snake, direction, width, height) => {
+    const head = { ...snake[0] };
+
+    if (direction === 'DOWN') {
+        head.y = head.y + CELL > height - CELL ? 0 : head.y + CELL;
+    }
+
+    if (direction === 'UP') {
+        head.y = head.y - CELL < 0 ? height - CELL : head.y - CELL;
+    }
+
+    if (direction === 'RIGHT') {
+        head.x = head.x + CELL > width - CELL ? 0 : head.x + CELL;
+    }
+
+    if (direction === 'LEFT') {
+        head.x = head.x - CELL < 0 ? width - CELL : head.x - CELL;
+    }
+
+    return head;
+};
+
+const checkSelfCollision = (snake, head) =>
+    snake.some(segment => segment.x === head.x && segment.y === head.y);
+
+const Canvas = ({ width, height }) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        const CELL = 20;
-
-        context.fillStyle = '#FFCE1B';
-        context.fillRect(0, 0, props.width, props.height);
+        const ctx = canvas.getContext('2d');
 
         let direction = 'RIGHT';
+        let speed = INITIAL_SPEED;
+        let intervalId;
+        let snake = [{ x: CELL, y: CELL }];
+        let food = generateFood(width, height);
 
-        let snake = [
-            { x: CELL, y: CELL }
-        ];
-
-        let speed = 200;
-
-        let interval;
-
-        let food = {
-            x: Math.floor(Math.random() * (props.width / CELL)) * CELL,
-            y: Math.floor(Math.random() * (props.height / CELL)) * CELL
+        const drawBackground = () => {
+            ctx.fillStyle = '#FFCE1B';
+            ctx.fillRect(0, 0, width, height);
         };
 
-        context.fillStyle = '#FF00FF';
-        context.beginPath();
-        context.arc(
-            food.x + CELL / 2,
-            food.y + CELL / 2,
-            CELL / 2,
-            0,
-            Math.PI * 2
-        );
-        context.fill();
+        const drawFood = () => {
+            ctx.fillStyle = '#FF00FF';
+            ctx.beginPath();
+            ctx.arc(
+                food.x + CELL / 2,
+                food.y + CELL / 2,
+                CELL / 2,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        };
 
-        context.fillStyle = '#00674F';
-        snake.forEach(item => {
-            context.beginPath();
-            context.roundRect(item.x, item.y, CELL, CELL, 4);
-            context.fill();
-        });
+        const drawSnake = () => {
+            ctx.fillStyle = '#00674F';
+            snake.forEach(segment => {
+                ctx.beginPath();
+                ctx.roundRect(segment.x, segment.y, CELL, CELL, 4);
+                ctx.fill();
+            });
+        };
 
-        const handleKeyDown = (event) => {
-            if (event.key === 'ArrowDown') {
+        const render = () => {
+            drawBackground();
+            drawFood();
+            drawSnake();
+        };
+
+        const startLoop = () => {
+            intervalId = setInterval(tick, speed);
+        };
+
+        const increaseSpeed = () => {
+            clearInterval(intervalId);
+            speed = Math.max(MIN_SPEED, speed - SPEED_STEP);
+            startLoop();
+        };
+
+        const resetGame = () => {
+            clearInterval(intervalId);
+            alert('Game Over');
+            snake = [{ x: CELL, y: CELL }];
+            direction = 'RIGHT';
+            speed = INITIAL_SPEED;
+            food = generateFood(width, height);
+            startLoop();
+        };
+
+        const tick = () => {
+            const nextHead = getNextHead(snake, direction, width, height);
+
+            if (checkSelfCollision(snake, nextHead)) {
+                resetGame();
+                return;
+            }
+
+            const ateFood = nextHead.x === food.x && nextHead.y === food.y;
+
+            snake.unshift(nextHead);
+
+            if (ateFood) {
+                food = generateFood(width, height);
+                increaseSpeed();
+            } else {
+                snake.pop();
+            }
+
+            render();
+        };
+
+        const handleKeyDown = event => {
+            if (event.key === 'ArrowDown' && direction !== 'UP') {
                 direction = 'DOWN';
             }
 
-            if (event.key === 'ArrowUp') {
+            if (event.key === 'ArrowUp' && direction !== 'DOWN') {
                 direction = 'UP';
             }
 
-            if (event.key === 'ArrowRight') {
+            if (event.key === 'ArrowRight' && direction !== 'LEFT') {
                 direction = 'RIGHT';
             }
 
-            if (event.key === 'ArrowLeft') {
+            if (event.key === 'ArrowLeft' && direction !== 'RIGHT') {
                 direction = 'LEFT';
             }
         };
 
-        const startInterval = () => {
-            
-            interval = setInterval(() => {
-                const head = { ...snake[0] };
-                if (direction === 'DOWN') {
-                    const isBottomEdge = head.y + CELL > props.height - CELL
-                    if (!isBottomEdge) {
-                        head.y += CELL;
-                    } else {
-                        head.y = 0;
-                    }
+        render();
+        startLoop();
 
-                }
-
-                if (direction === 'UP') {
-                    const isTopEdge = (head.y - CELL) < 0;
-                    if (!isTopEdge) {
-                        head.y -= CELL;
-                    } else {
-                        head.y = props.height - CELL;
-                    }
-
-                }
-
-                if (direction === 'RIGHT') {
-                    const isRightEdge = head.x + CELL > props.width - CELL;
-                    if (!isRightEdge) {
-                        head.x += CELL;
-                    } else {
-                        head.x = 0;
-                    }
-
-                }
-
-                if (direction === 'LEFT') {
-                    const isLeftEdge = (head.x - CELL) < 0;
-                    if (!isLeftEdge) {
-                        head.x -= CELL;
-                    } else {
-                        head.x = props.width - CELL;
-                    }
-
-                }
-                console.log(head.x, head.y)
-
-                const isFood = head.x === food.x && head.y == food.y;
-                const hitSelf = snake.some(segment => segment.x === head.x && segment.y === head.y);
-                if (hitSelf) {
-                    clearInterval(interval);
-                    alert('Game Over');
-
-                    // Reset game state
-                    snake = [{ x: CELL, y: CELL }];
-                    direction = 'RIGHT';
-                    speed = 200;
-                    food = {
-                        x: Math.floor(Math.random() * (props.width / CELL)) * CELL,
-                        y: Math.floor(Math.random() * (props.height / CELL)) * CELL
-                    };
-
-                    startInterval();
-                    return;
-                }
-
-                snake.unshift(head);
-
-                if (isFood) {
-                    food.x = Math.floor(Math.random() * (props.width / CELL)) * CELL;
-                    food.y = Math.floor(Math.random() * (props.height / CELL)) * CELL;
-
-                    context.fillStyle = '#FF00FF';
-                    context.beginPath();
-                    context.arc(
-                        food.x + CELL / 2,
-                        food.y + CELL / 2,
-                        CELL / 2,
-                        0,
-                        Math.PI * 2
-                    );
-                    context.fill();
-
-                    clearInterval(interval);
-                    speed = Math.max(60, speed - 5);
-                    startInterval();
-                } else {
-                    snake.pop();
-                }
-
-
-                context.fillStyle = '#FFCE1B';
-                context.fillRect(0, 0, props.width, props.height);
-
-                context.fillStyle = '#FF00FF';
-                context.beginPath();
-                context.arc(
-                    food.x + CELL / 2,
-                    food.y + CELL / 2,
-                    CELL / 2,
-                    0,
-                    Math.PI * 2
-                );
-                context.fill();
-
-
-                context.fillStyle = '#00674F';
-                snake.forEach(item => {
-                    context.beginPath();
-                    context.roundRect(item.x, item.y, CELL, CELL, 4);
-                    context.fill();
-                });
-            }, speed);
-        }
-
-        startInterval();
-
-        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-            clearInterval(interval);
+            window.removeEventListener('keydown', handleKeyDown);
+            clearInterval(intervalId);
         };
-    }, []);
 
+    }, [width, height]);
 
-    return <canvas ref={canvasRef} width={props.width} height={props.height} />;
-}
+    return <canvas ref={canvasRef} width={width} height={height} />;
+};
 
 export default Canvas;
