@@ -57,8 +57,12 @@ const Canvas = () => {
         const drawScores = () => {
             ctx.fillStyle = 'white';
             ctx.font = 'bold 16px Verdana';
+
             ctx.textAlign = 'left';
             ctx.fillText(`P1: ${gameState.scores.p1}`, 10, 20);
+
+            ctx.textAlign = 'center';
+            ctx.fillText(`P3: ${gameState.scores.p3}`, BOARD_SIZE / 2, 20);
 
             ctx.textAlign = 'right';
             ctx.fillText(`P2: ${gameState.scores.p2}`, BOARD_SIZE - 10, 20);
@@ -70,6 +74,7 @@ const Canvas = () => {
             drawFood();
             drawSnake(gameState.snakes.p1, '#10B981');
             drawSnake(gameState.snakes.p2, '#F43F5E');
+            drawSnake(gameState.snakes.p3, '#3B82F6');
             drawScores();
         };
 

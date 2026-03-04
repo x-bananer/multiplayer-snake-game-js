@@ -5,7 +5,7 @@ const BOARD_SIZE = 380;
 
 const PORT = process.env.PORT || 3000;
 const CELL = 20;
-const INITIAL_SPEED = 100;
+const INITIAL_SPEED = 150;
 const MIN_SPEED = 60;
 const SPEED_STEP = 5;
 
@@ -22,7 +22,8 @@ const clients = new Set();
 
 let players = {
     p1: null,
-    p2: null
+    p2: null,
+    p3: null
 };
 
 const broadcast = () => {
@@ -38,14 +39,16 @@ const startGame = () => {
     state = {
         snakes: {
             p1: [{ x: CELL, y: CELL }],
-            p2: [{ x: width - CELL * 2, y: height - CELL * 2 }]
+            p2: [{ x: width - CELL * 2, y: height - CELL * 2 }],
+            p3: [{ x: width / 2, y: height / 2 }]
         },
         directions: {
             p1: 'RIGHT',
-            p2: 'LEFT'
+            p2: 'LEFT',
+            p3: 'UP'
         },
         food: generateFood(width, height),
-        scores: { p1: 0, p2: 0 },
+        scores: { p1: 0, p2: 0, p3: 0 },
         status: 'running',
         winner: null
     };
@@ -88,6 +91,9 @@ wss.on('connection', ws => {
     } else if (!players.p2) {
         players.p2 = ws;
         playerId = 'p2';
+    } else if (!players.p3) {
+        players.p3 = ws;
+        playerId = 'p3';
     }
 
     ws.send(JSON.stringify({
@@ -123,6 +129,7 @@ wss.on('connection', ws => {
 
         if (players.p1 === ws) players.p1 = null;
         if (players.p2 === ws) players.p2 = null;
+        if (players.p3 === ws) players.p3 = null;
     });
 });
 
