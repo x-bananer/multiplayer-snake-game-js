@@ -5,7 +5,7 @@ const BOARD_SIZE = 380;
 
 const PORT = process.env.PORT || 3000;
 const CELL = 20;
-const INITIAL_SPEED = 200;
+const INITIAL_SPEED = 100;
 const MIN_SPEED = 60;
 const SPEED_STEP = 5;
 
